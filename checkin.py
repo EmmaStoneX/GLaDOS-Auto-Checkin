@@ -103,12 +103,17 @@ def main():
                 ok += 1
                 points = j.get("points", "-")
                 status = "✅ 成功"
-            elif "repeat" in msg_lower or "already" in msg_lower:
+            elif (
+                "repeat" in msg_lower
+                or "already" in msg_lower
+                or "today's observation logged" in msg_lower
+                or "return tomorrow" in msg_lower
+            ):
                 repeat += 1
                 status = "🔁 已签到"
             else:
                 fail += 1
-                status = "❌ 失败"
+                status = f"❌ 失败: {msg or r.text[:120]}"
 
             # 状态接口（允许失败）
             s = session.get(STATUS_URL, headers=headers, timeout=TIMEOUT)
@@ -128,8 +133,11 @@ def main():
     content = "\n".join(lines)
 
     print(content)
-    
+
     push_all(bot_token, chat_id, title, content)
+
+    if fail:
+        raise SystemExit(1)
 
 
 if __name__ == "__main__":
